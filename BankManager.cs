@@ -45,15 +45,24 @@ namespace BankApp
                 var value = DateTime.Parse(Console.ReadLine()!);
                 string dateOfBirth = value.ToString("d");
 
-                Console.WriteLine("Select a username: ");
-                string username = Console.ReadLine()!;
-                if (!Check.IsValid(username))
-                {
-                    Console.WriteLine("Invalid Input");
-                    return;
-                }
-
+                string username;
                 int selectedPin;
+                while (true)
+                {
+                    Console.WriteLine("Select a username: ");
+                    username = Console.ReadLine()!;
+                    if (!Check.IsValid(username))
+                    {
+                        Console.WriteLine("Invalid Input");
+                        return;
+                    }
+                    if (generalInfo.Any(x => x.Username == username))
+                    {
+                        Console.WriteLine("Username is not Available");
+                        continue;
+                    }
+                    break;
+                }
                 while (true)
                 {
                     Console.Write("Select a pin with four digits: ");
@@ -69,12 +78,12 @@ namespace BankApp
                     }
                     Console.WriteLine("Invalid input");
                 }
+            
 
                 decimal moneyInBank = 0M;
                 string accountNumber = GenerateAccountNumber();
                 var createdAt = DateTime.Now.ToString("f");
                 Console.WriteLine("Thank you for choosing The GreenBank\nYou have succesfully completed your registration, log in to view your Account Number");
-
 
                 Data data = new()
                 {
@@ -100,7 +109,6 @@ namespace BankApp
         {
             Console.Write("\nEnter Username :");
             string username = Console.ReadLine()!;
-
 
             Console.Write("Enter Pin :");
             int pin = int.Parse(Console.ReadLine()!.Trim());
@@ -147,7 +155,7 @@ namespace BankApp
                 info.MoneyInBank += amount;
                 var time = DateTime.Now.ToString("f");
                 Console.WriteLine($"${amount} has been successfully deposited in your account");
-                string message = $"Succesful deposit of ${amount} at {time} to account Number {info.AccountNumber}";
+                string message = $"Succesful deposit of ${amount} at {time}({char.ToUpper(info.FirstName[0]) + info.FirstName.Substring(1)} {char.ToUpper(info.LastName[0]) + info.LastName.Substring(1)})";
                 transactions.Add(message);
             }
             catch (Exception ex)
@@ -160,56 +168,56 @@ namespace BankApp
         {
             try
             {
-            Console.WriteLine("Enter Pin");
-            int pin = int.Parse(Console.ReadLine()!);
+                Console.WriteLine("Enter Pin");
+                int pin = int.Parse(Console.ReadLine()!);
 
-            if (info.Pin != pin)
-            {
-                Console.WriteLine("Invalid Pin");
-                return;
-            }
+                if (info.Pin != pin)
+                {
+                    Console.WriteLine("Invalid Pin");
+                    return;
+                }
 
-            Console.WriteLine("Enter the account Number to Transfer money");
-            string accountNumber = Console.ReadLine()!;
+                Console.WriteLine("Enter the account Number to Transfer money");
+                string accountNumber = Console.ReadLine()!;
 
-            var user = FindAccount(accountNumber);
-            if (user == null)
-            {
-                Console.WriteLine("Invalid Account number");
-                return;
-            }
+                var user = FindAccount(accountNumber);
+                if (user == null)
+                {
+                    Console.WriteLine("Invalid Account number");
+                    return;
+                }
 
-            if (user.AccountNumber == accountNumber)
-            {
-                Console.WriteLine("Invalid input, you cannot input your account number");
-                return;
-            }
+                if (info.AccountNumber == accountNumber)
+                {
+                    Console.WriteLine("Invalid input, you cannot input your account number");
+                    return;
+                }
 
-            Console.WriteLine($" Found User- {char.ToUpper(user.FirstName[0]) + user.FirstName.Substring(1)} {char.ToUpper(user.MiddleName[0]) + user.MiddleName.Substring(1)} {char.ToUpper(user.LastName[0]) + user.LastName.Substring(1)}");
-            Console.WriteLine("How much will you like to send ");
+                Console.WriteLine($" Found User- {char.ToUpper(user.FirstName[0]) + user.FirstName.Substring(1)} {char.ToUpper(user.MiddleName[0]) + user.MiddleName.Substring(1)} {char.ToUpper(user.LastName[0]) + user.LastName.Substring(1)}");
+                Console.WriteLine("How much will you like to send ");
 
-            bool _ = decimal.TryParse(Console.ReadLine()!, out decimal amount);
-            if (amount <= 0)
-            {
-                Console.WriteLine("Amount cannot be 0 or less than 0");
-                return;
-            }
+                bool _ = decimal.TryParse(Console.ReadLine()!, out decimal amount);
+                if (amount <= 0)
+                {
+                    Console.WriteLine("Amount cannot be 0 or less than 0");
+                    return;
+                }
 
-            if (info.MoneyInBank < amount)
-            {
-                var timeA = DateTime.Now.ToString("f");
-                Console.WriteLine("Insufficient Funds");
-                string messageA = $"Failed Transfer of ${amount} at {timeA} due to insufficient funds({info.AccountNumber})";
-                transactions.Add(messageA);
-                return;
-            }
+                if (info.MoneyInBank < amount)
+                {
+                    var timeA = DateTime.Now.ToString("f");
+                    Console.WriteLine("Insufficient Funds");
+                    string messageA = $"Failed Transfer of ${amount} at {timeA} due to insufficient funds to {char.ToUpper(info.FirstName[0]) + info.FirstName.Substring(1)} {char.ToUpper(info.LastName[0]) + info.LastName.Substring(1)}";
+                    transactions.Add(messageA);
+                    return;
+                }
 
-            info.MoneyInBank -= amount;
-            user.MoneyInBank += amount;
-            Console.WriteLine($"{amount} has been sent to User with account number {user.AccountNumber}");
-            var timeB = DateTime.Now.ToString("f");
-            string messageB = $"Succesful transfer of {amount} at {timeB}({info.AccountNumber})";
-            transactions.Add(messageB);
+                info.MoneyInBank -= amount;
+                user.MoneyInBank += amount;
+                Console.WriteLine($"${amount} has been sent to User with account number {user.AccountNumber}");
+                var timeB = DateTime.Now.ToString("f");
+                string messageB = $"Succesful transfer of ${amount} at {timeB} to {char.ToUpper(info.FirstName[0]) + info.FirstName.Substring(1)} {char.ToUpper(info.LastName[0]) + info.LastName.Substring(1)}";
+                transactions.Add(messageB);
             }
             catch (Exception ex)
             {
@@ -229,6 +237,11 @@ namespace BankApp
 
         public void ViewAccountInfo(Data info)
         {
+            if (transactions.Count == 0)
+            {
+                Console.WriteLine("No transactions yet..");
+                return;
+            }
             Console.WriteLine($""""
                  FirstName => {info.FirstName}
                  MidlleName => {info.MiddleName}
